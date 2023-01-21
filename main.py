@@ -43,34 +43,97 @@ nbaweeks = {#if date is greater than week1 and less than or equal to week2, then
     }
 
 def getweek(date=datetime.date.today()):
+    '''Returns the week that a given date is within'''
     for key,value in nbaweeks.items():
         if date > value and date <= nbaweeks[key+1]:
             return key+1
 
-def getmatchupid(team):
-    i = -1
-    teambox = ''
-    for matchup in leaguebox:
-        i += 1
-        if str(team) in str(matchup):
-            teambox = i
-            break
-    return teambox
-
 def showmatchup(matchupid):
+    '''Returns list of two teams facing each other'''
     teamsplit = str(leaguebox[matchupid]).split(' at ')
     teamsplit[0] = teamsplit[0][15:-1]
     teamsplit[1] = teamsplit[1][5:-2]
     return teamsplit #returns ['team1', 'team2']
 
 def showallmatchups():
+    '''Returns list of sublists of two teams facing each other'''
     allmatchups = []
-    for matchup in leaguebox:
-        allmatchups.append(showmatchup())
+    for i in range(5):
+        allmatchups.append(showmatchup(i))
     return allmatchups
 
+def playernumofgames(player, week=getweek()):
+    '''Finds number of games for a player in a given week'''
+    games = 0
+    schedule = player.schedule.values()
+    newgames = []
+    playerdates = []
+    for game in schedule:
+        newgames.append(game)
+    for game in newgames:
+        for key, value in game.items():
+            if key == 'date':
+                playerdates.append(value)
+    for date in playerdates:
+        date = date.date()
+        if getweek(date) == week:
+            games += 1
+    return games
+    
+def teamnumofgames(team, week=getweek()):
+    '''Uses playernumofgames() to find a team's total game count of a given week'''
+    teamgames = 0
+    for player in team.roster:
+        teamgames += playernumofgames(player, week)
+    return teamgames
 
+def standings():
+    '''Returns list of strings, team records first and team name next'''
+    stands = []
+    for team in league.standings():
+        stands.append(f'{team.wins}-{team.losses}-{team.ties} {team.team_name}')
+    return stands
 
+def statprojection():
+    pass
+
+def recent_activity(ttype='WAVIER', num=10):
+    activities = []
+    for activity in league.recent_activity(num, ttype):# msg_type inputs: 'FA', 'WAVIER', 'TRADED'
+        activities.append(activity)
+    return activities
+
+def schedule(team):
+    '''Returns full schedule of given team in a list of strings'''
+    i = 1
+    weeks = []
+    for matchup in team.schedule:
+        matchup = str(matchup)
+        if ' - ' in matchup:
+            matchupsplit = matchup.split(' - ')
+            team1 = matchupsplit[0]
+            team1 = team1[13:-5]
+            #team1 = [team1, matchupsplit[0][-3:]]
+            team2 = matchupsplit[1]
+            team2 = team2[9:-2]
+            #team2 = [team2, matchupsplit[1][:3]]
+            week = 'Week ' + str(i) + ': ' + team1 + ' vs ' + team2
+            i += 1
+            weeks.append(week)
+        elif '), ' in matchup:
+            matchupsplit = matchup.split('), ')
+            team1 = matchupsplit[0]
+            team1 = team1[13:]
+            team2 = matchupsplit[1]
+            team2 = team2[5:-2]
+            week = 'Week ' + str(i) + ': ' + team1 + ' vs ' + team2
+            i += 1
+            weeks.append(week)
+    return weeks
+            
+#
+#what to do about ties in schedule(team)
+#
 
 
 
@@ -80,12 +143,38 @@ def showallmatchups():
 
 
 def main():
-    print('')#current matchup
+    choice = ''
+    while choice != 10:
+        print('Fantasy Basketball Tool for Who Invited The Kid')
+        print(f'{schedule(myteam)[getweek() - 1]}\n')
+        print('1) Matchup stats and projections')
+        print('2) Show all matchups')
+        print('3) Schedule')
+        print('4) My games vs oppenents games')
+        print('5) Recent league activity')
+        print('6) Compare player stats')
+        print('7) Standings')
+        choice = int(input('Option: '))
+        print('')
 
-
-#print(showmatchup(getmatchupid(myteam)))
-#print(showallmatchups())
-
-#for key,value in myroster[0].schedule.items():
-    #print(f'{key}    {value}')
-
+        if choice == 1:
+            pass
+        elif choice == 2:
+            for match in showallmatchups():
+                print(match[0] + ' vs ' + match[1])
+            print('\n')
+        elif choice == 3:
+            #change to choose team
+            for week in schedule(myteam):
+                print(week)
+            print('\n')
+        elif choice == 4:
+            #change to choose options
+            pass
+        elif choice == 5:
+            pass
+        elif choice == 6:
+            pass
+        elif choice == 7:
+            pass
+main()
