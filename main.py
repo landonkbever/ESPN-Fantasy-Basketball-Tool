@@ -98,6 +98,7 @@ def statprojection():
     pass
 
 def recent_activity(ttype='WAVIER', num=10):
+    '''Returns list of specific size league activities'''
     activities = []
     for activity in league.recent_activity(num, ttype):# msg_type inputs: 'FA', 'WAVIER', 'TRADED'
         activities.append(activity)
@@ -108,6 +109,12 @@ def schedule(team):
     i = 1
     weeks = []
     for matchup in team.schedule:
+        team1wins = 0
+        team1ties = 0
+        team1losses = 0
+        team2wins = 0
+        team2ties = 0
+        team2losses = 0
         matchup = str(matchup)
         if ' - ' in matchup:
             matchupsplit = matchup.split(' - ')
@@ -117,26 +124,52 @@ def schedule(team):
             team2 = matchupsplit[1]
             team2 = team2[9:-2]
             #team2 = [team2, matchupsplit[1][:3]]
-            week = 'Week ' + str(i) + ': ' + team1 + ' vs ' + team2
-            i += 1
-            weeks.append(week)
         elif '), ' in matchup:
             matchupsplit = matchup.split('), ')
             team1 = matchupsplit[0]
             team1 = team1[13:]
             team2 = matchupsplit[1]
             team2 = team2[5:-2]
-            week = 'Week ' + str(i) + ': ' + team1 + ' vs ' + team2
-            i += 1
-            weeks.append(week)
+        for matchup in league.box_scores(i):
+            if team.team_name in str(matchup):
+                for cat in matchup.home_stats.values():
+                    outcome = cat.get('result')  
+                    if outcome == 'WIN':
+                        team1wins += 1
+                    elif outcome == 'LOSS':
+                        team1losses += 1
+                    elif outcome == 'TIE':
+                        team1ties += 1
+                for cat in matchup.away_stats.values():
+                    outcome = cat.get('result')
+                    if outcome == 'WIN':
+                        team2wins += 1
+                    elif outcome == 'LOSS':
+                        team2losses += 1
+                    elif outcome == 'TIE':
+                        team2ties += 1
+                break
+        if i > getweek():
+            week = f'Week {i}: {team1} vs {team2}'
+        else:
+            week = f'Week {i}: {team1} {team1wins}-{team1losses}-{team1ties} vs {team2wins}-{team2losses}-{team2ties} {team2}'
+        i += 1
+        weeks.append(week)
     return weeks
             
-#
-#what to do about ties in schedule(team)
-#
-
-
-
+def playercompare(player1, player2):
+    player1stats = player1.stats.get('2023_last_15').get('avg')
+    player2stats = player2.stats.get('2023_last_15').get('avg')
+    print(f"{player1.name}     {player2.name}")
+    print(f"PTS: {round(player1stats.get('PTS'), 1)}          {round(player2stats.get('PTS'), 1)}")
+    print(f"REB: {round(player1stats.get('REB'), 1)}          {round(player2stats.get('REB'), 1)}")
+    print(f"AST: {round(player1stats.get('AST'), 1)}          {round(player2stats.get('AST'), 1)}")
+    print(f"STL: {round(player1stats.get('STL'), 1)}          {round(player2stats.get('STL'), 1)}")
+    print(f"BLK: {round(player1stats.get('BLK'), 1)}          {round(player2stats.get('BLK'), 1)}")
+    print(f"FG%: {round(player1stats.get('FG%'), 3)}        {round(player2stats.get('FG%'), 3)}")
+    print(f"FT%: {round(player1stats.get('FT%'), 3)}        {round(player2stats.get('FT%'), 3)}")
+    print(f"3PTM: {round(player1stats.get('3PTM'), 1)}         {round(player2stats.get('3PTM'), 1)}")
+    ### try to use len() to make stats line up with a 'number of spaces' variable
 
 
 
@@ -159,22 +192,146 @@ def main():
 
         if choice == 1:
             pass
+        ###current idea: average player averages and projections if available
+        ###to team category totals and compare which is higher
+        
         elif choice == 2:
             for match in showallmatchups():
                 print(match[0] + ' vs ' + match[1])
             print('\n')
+            
         elif choice == 3:
-            #change to choose team
-            for week in schedule(myteam):
+            i = 0
+            for team in league.teams:
+                i += 1
+                print(f'{i}: {team.team_name}')
+            print('')
+            teamchoice = int(input("Which team's schedule?: "))
+            teamchoice -= 1
+            teamchoice = league.teams[teamchoice]
+            print('')
+            for week in schedule(teamchoice):
                 print(week)
             print('\n')
+            
         elif choice == 4:
-            #change to choose options
-            pass
+            whichweek = int(input('Week: '))
+            for team in league.teams:
+                if team.team_name != myteam.team_name and team.team_name in schedule(myteam)[whichweek-1]:
+                    matchup = team.team_name
+            i = -1
+            for team in league.teams:
+                i += 1
+                if team.team_name == matchup:
+                    break
+            oppteam = league.teams[i]
+            mymaxgames = teamnumofgames(myteam, whichweek)
+            oppmaxgames = teamnumofgames(oppteam, whichweek)
+            print(f'Week {whichweek}: My Team ({mymaxgames}) - Opp Team ({oppmaxgames})')
+            print('')
+
         elif choice == 5:
-            pass
+            print('What type?\n')
+            print('1) Waivers')
+            print('2) Trades')
+            option = int(input('Option: '))
+            print('What size?')
+            size = int(input('Size: '))
+            if option == 1:
+                activities = recent_activity('WAVIER', size)
+            if option == 2:
+                activities = recent_activity('TRADED', size)
+            for activity in activities:
+                print(activity)### Try to make easier to read
+            print('')
+        
         elif choice == 6:
-            pass
+        ###choose player from any team or waivers to compare stats to
+        ###another player from any team or waivers. highlight whos better
+        ###in certain categories
+
+        ###potentially try a player search option
+            print('Choosing Player 1\n')
+            print('1) Choose from team')
+            print('2) Choose from waivers\n')
+            player1place = int(input('Option: '))
+            print('')
+            if player1place == 1:
+                i = 1
+                for team in league.teams:
+                    print(f'{i}. {team.team_name}')
+                    i += 1
+                print('\nChoose a team\n')
+                teamchoice = int(input('Team: '))
+                print('')
+                teamchoice = league.teams[teamchoice-1]
+                i = 1
+                for player in teamchoice.roster:
+                    print(f'{i}. {player.name}')
+                    i += 1
+                print('\nChoose a player\n')
+                playerchoice = int(input('Player: '))
+                print('')
+                player1 = teamchoice.roster[playerchoice-1]
+            elif player1place == 2:
+                print('PG, SG, SF, PF, C, G, or F?\n')
+                position = input('Position: ')
+                print('')
+                i = 1
+                for player in league.free_agents(size=10, position=position):
+                    print(f'{i}. {player.name}')
+                    i += 1
+                print('\nChoose a player\n')
+                playerchoice = int(input('Player: '))
+                print('')
+                player1 = league.free_agents(size=10, position=position)[playerchoice-1]
+
+            #####
+            
+            print('Choosing Player 2\n')
+            print('1) Choose from team')
+            print('2) Choose from waivers\n')
+            player2place = int(input('Option: '))
+            print('')
+            if player2place == 1:
+                i = 1
+                for team in league.teams:
+                    print(f'{i}. {team.team_name}')
+                    i += 1
+                print('\nChoose a team\n')
+                teamchoice = int(input('Team: '))
+                print('')
+                teamchoice = league.teams[teamchoice-1]
+                i = 1
+                for player in teamchoice.roster:
+                    print(f'{i}. {player.name}')
+                    i += 1
+                print('\nChoose a player\n')
+                playerchoice = int(input('Player: '))
+                print('')
+                player2 = teamchoice.roster[playerchoice-1]
+            elif player2place == 2:
+                print('PG, SG, SF, PF, C, G, or F?\n')
+                position = input('Position: ')
+                print('')
+                i = 1
+                for player in league.free_agents(size=10, position=position):
+                    print(f'{i}. {player.name}')
+                    i += 1
+                print('\nChoose a player\n')
+                playerchoice = int(input('Player: '))
+                print('')
+                player2 = league.free_agents(size=10, position=position)[playerchoice-1]
+            playercompare(player1, player2)
+            print('')
+                
+        
         elif choice == 7:
-            pass
+            i = 1
+            for record in standings():
+                print(f'{i}. {record}')
+                i += 1
+            print('')
+        
 main()
+
