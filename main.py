@@ -1,5 +1,4 @@
 #ESPN Fantasy Basketball tool
-#Used to take grown men's money
 
 from espn_api.basketball import League
 import datetime
@@ -120,10 +119,8 @@ def schedule(team):
             matchupsplit = matchup.split(' - ')
             team1 = matchupsplit[0]
             team1 = team1[13:-5]
-            #team1 = [team1, matchupsplit[0][-3:]]
             team2 = matchupsplit[1]
             team2 = team2[9:-2]
-            #team2 = [team2, matchupsplit[1][:3]]
         elif '), ' in matchup:
             matchupsplit = matchup.split('), ')
             team1 = matchupsplit[0]
@@ -160,16 +157,34 @@ def schedule(team):
 def playercompare(player1, player2):
     player1stats = player1.stats.get('2023_last_15').get('avg')
     player2stats = player2.stats.get('2023_last_15').get('avg')
-    print(f"{player1.name}     {player2.name}")
-    print(f"PTS: {round(player1stats.get('PTS'), 1)}          {round(player2stats.get('PTS'), 1)}")
-    print(f"REB: {round(player1stats.get('REB'), 1)}          {round(player2stats.get('REB'), 1)}")
-    print(f"AST: {round(player1stats.get('AST'), 1)}          {round(player2stats.get('AST'), 1)}")
-    print(f"STL: {round(player1stats.get('STL'), 1)}          {round(player2stats.get('STL'), 1)}")
-    print(f"BLK: {round(player1stats.get('BLK'), 1)}          {round(player2stats.get('BLK'), 1)}")
-    print(f"FG%: {round(player1stats.get('FG%'), 3)}        {round(player2stats.get('FG%'), 3)}")
-    print(f"FT%: {round(player1stats.get('FT%'), 3)}        {round(player2stats.get('FT%'), 3)}")
-    print(f"3PTM: {round(player1stats.get('3PTM'), 1)}         {round(player2stats.get('3PTM'), 1)}")
-    ### try to use len() to make stats line up with a 'number of spaces' variable
+    charmax = 25
+    space = charmax - len(f"{player1.name}")
+    print(f"{player1.name}{space*' '}{player2.name}")
+    
+    space = charmax - len(f"PTS: {round(player1stats.get('PTS'), 1)}")
+    print(f"PTS: {round(player1stats.get('PTS'), 1)}{space*' '}{round(player2stats.get('PTS'), 1)}")
+    
+    space = charmax - len(f"REB: {round(player1stats.get('REB'), 1)}")
+    print(f"REB: {round(player1stats.get('REB'), 1)}{space*' '}{round(player2stats.get('REB'), 1)}")
+    
+    space = charmax - len(f"AST: {round(player1stats.get('AST'), 1)}")
+    print(f"AST: {round(player1stats.get('AST'), 1)}{space*' '}{round(player2stats.get('AST'), 1)}")
+    
+    space = charmax - len(f"STL: {round(player1stats.get('STL'), 1)}")
+    print(f"STL: {round(player1stats.get('STL'), 1)}{space*' '}{round(player2stats.get('STL'), 1)}")
+    
+    space = charmax - len(f"BLK: {round(player1stats.get('BLK'), 1)}")
+    print(f"BLK: {round(player1stats.get('BLK'), 1)}{space*' '}{round(player2stats.get('BLK'), 1)}")
+    
+    space = charmax - len(f"FG%: {round(player1stats.get('FG%')*100, 1)}")
+    print(f"FG%: {round(player1stats.get('FG%')*100, 1)}{space*' '}{round(player2stats.get('FG%')*100, 1)}")
+    
+    space = charmax - len(f"FT%: {round(player1stats.get('FT%')*100, 1)}")
+    print(f"FT%: {round(player1stats.get('FT%')*100, 1)}{space*' '}{round(player2stats.get('FT%')*100, 1)}")
+    
+    space = charmax - len(f"3PTM: {round(player1stats.get('3PTM'), 1)}")
+    print(f"3PTM: {round(player1stats.get('3PTM'), 1)}{space*' '}{round(player2stats.get('3PTM'), 1)}")
+    
 
 
 
@@ -246,10 +261,6 @@ def main():
             print('')
         
         elif choice == 6:
-        ###choose player from any team or waivers to compare stats to
-        ###another player from any team or waivers. highlight whos better
-        ###in certain categories
-
         ###potentially try a player search option
             print('Choosing Player 1\n')
             print('1) Choose from team')
